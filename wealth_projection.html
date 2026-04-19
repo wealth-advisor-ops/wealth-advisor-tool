@@ -1,243 +1,38 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Financial Advisor Pro | Wealth Simulator</title>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <style>
-        :root {
-            --primary: #1e293b;
-            --accent: #10b981;
-            --etf-color: #3b82f6;
-            --prop-color: #f59e0b;
-            --bg: #f8fafc;
-        }
+function runDetailedAnalysis() {
+    const capital = parseFloat(document.getElementById('totalCap').value);
+    const inflationRate = 0.03; // 3% Inflation as a standard
+    const years = 30; // Let's look further ahead
+    
+    let currentWealth = capital;
+    let reportData = []; // This is our "Data Bucket" for the 100-page report
 
-        body {
-            font-family: 'Inter', system-ui, sans-serif;
-            background-color: var(--bg);
-            color: var(--primary);
-            margin: 0;
-            padding: 20px;
-        }
-
-        .wrapper {
-            max-width: 1100px;
-            margin: 0 auto;
-        }
-
-        header {
-            text-align: center;
-            margin-bottom: 30px;
-        }
-
-        .main-grid {
-            display: grid;
-            grid-template-columns: 350px 1fr;
-            gap: 25px;
-        }
-
-        .panel {
-            background: white;
-            padding: 25px;
-            border-radius: 12px;
-            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
-        }
-
-        h2 { font-size: 1.1rem; margin-top: 0; border-bottom: 2px solid #f1f5f9; padding-bottom: 10px; }
-
-        .input-group { margin-bottom: 15px; }
-        label { display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 5px; color: #64748b; }
-        input[type="number"] {
-            width: 100%;
-            padding: 10px;
-            border: 1px solid #cbd5e1;
-            border-radius: 6px;
-            font-size: 1rem;
-        }
-
-        .insurance-box {
-            background: #f0fdf4;
-            padding: 15px;
-            border-radius: 8px;
-            border: 1px solid #dcfce7;
-            margin-top: 20px;
-        }
-
-        .btn-calc {
-            width: 100%;
-            background: var(--primary);
-            color: white;
-            padding: 12px;
-            border: none;
-            border-radius: 6px;
-            font-weight: bold;
-            cursor: pointer;
-            margin-top: 15px;
-            transition: opacity 0.2s;
-        }
-
-        .btn-calc:hover { opacity: 0.9; }
-
-        canvas { width: 100% !important; height: 400px !important; }
-    </style>
-</head>
-<body>
-
-<div class="wrapper">
-    <header>
-        <h1>Client Wealth Projection Tool</h1>
-        <p>Interactive simulation for Asset Allocation & Risk Management</p>
-    </header>
-
-    <div class="main-grid">
-        <div class="panel">
-            <h2>Investment Parameters</h2>
-            
-            <div class="input-group">
-                <label>Simulation Period (Years)</label>
-                <input type="number" id="years" value="25">
-            </div>
-
-            <div class="input-group">
-                <label>Initial ETF Investment ($)</label>
-                <input type="number" id="etfInitial" value="100000">
-            </div>
-
-            <div class="input-group">
-                <label>Expected ETF Return (% Annual)</label>
-                <input type="number" id="etfRate" value="8">
-            </div>
-
-            <div class="input-group">
-                <label>Property Value ($)</label>
-                <input type="number" id="propValue" value="450000">
-            </div>
-
-            <div class="input-group">
-                <label>Property Appreciation (% Annual)</label>
-                <input type="number" id="propRate" value="4">
-            </div>
-
-            <div class="insurance-box">
-                <label style="display: flex; align-items: center; cursor: pointer;">
-                    <input type="checkbox" id="insuranceFlag" style="margin-right: 10px;">
-                    Apply Liability Insurance
-                </label>
-                <small style="color: #166534; display: block; margin-top: 5px;">
-                    Estimated Cost: $800/year (Inflation adjusted 2%)
-                </small>
-            </div>
-
-            <button class="btn-calc" onclick="runSimulation()">Update Projection</button>
-        </div>
-
-        <div class="panel">
-            <h2>Net Worth Growth Projection</h2>
-            <canvas id="wealthChart"></canvas>
-        </div>
-    </div>
-</div>
-
-<script>
-    let chartInstance = null;
-
-    function runSimulation() {
-        const years = parseInt(document.getElementById('years').value);
-        const etfInit = parseFloat(document.getElementById('etfInitial').value);
-        const etfRate = parseFloat(document.getElementById('etfRate').value) / 100;
-        const propInit = parseFloat(document.getElementById('propValue').value);
-        const propRate = parseFloat(document.getElementById('propRate').value) / 100;
-        const hasInsurance = document.getElementById('insuranceFlag').checked;
-
-        let labels = [];
-        let etfData = [];
-        let propData = [];
-        let totalData = [];
-
-        for (let i = 0; i <= years; i++) {
-            labels.push("Year " + i);
-
-            // ETF Calculation: P(1+r)^t
-            let etfVal = etfInit * Math.pow(1 + etfRate, i);
-            etfData.push(etfVal.toFixed(0));
-
-            // Property Calculation: P(1+r)^t - (Insurance Cost over time)
-            let insuranceTotal = 0;
-            if (hasInsurance) {
-                // Cost grows slightly with inflation
-                for(let j=0; j<i; j++) {
-                    insuranceTotal += 800 * Math.pow(1.02, j);
-                }
-            }
-            let propVal = (propInit * Math.pow(1 + propRate, i)) - insuranceTotal;
-            propData.push(propVal.toFixed(0));
-
-            totalData.push((etfVal + propVal).toFixed(0));
-        }
-
-        renderChart(labels, etfData, propData, totalData);
-    }
-
-    function renderChart(labels, etf, prop, total) {
-        const ctx = document.getElementById('wealthChart').getContext('2d');
+    for (let y = 1; y <= years; y++) {
+        // 1. Calculations (The "Logic Segments")
+        let growth = currentWealth * 0.07; // Assuming 7% average growth
+        let tax = growth * 0.20;           // Assuming 20% Capital Gains tax
+        let insurance = 1200;              // Standard Premium
         
-        if (chartInstance) chartInstance.destroy();
+        let netYearlyChange = growth - tax - insurance;
+        currentWealth += netYearlyChange;
 
-        chartInstance = new Chart(ctx, {
-            type: 'line',
-            data: {
-                labels: labels,
-                datasets: [
-                    {
-                        label: 'Total Net Worth',
-                        data: total,
-                        borderColor: '#10b981',
-                        backgroundColor: 'rgba(16, 185, 129, 0.1)',
-                        borderWidth: 4,
-                        fill: true,
-                        tension: 0.3
-                    },
-                    {
-                        label: 'Real Estate Portfolio',
-                        data: prop,
-                        borderColor: '#f59e0b',
-                        borderWidth: 2,
-                        fill: false,
-                        borderDash: [5, 5]
-                    },
-                    {
-                        label: 'ETF Portfolio',
-                        data: etf,
-                        borderColor: '#3b82f6',
-                        borderWidth: 2,
-                        fill: false
-                    }
-                ]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    tooltip: {
-                        callbacks: {
-                            label: (context) => `${context.dataset.label}: $${Number(context.raw).toLocaleString()}`
-                        }
-                    }
-                },
-                scales: {
-                    y: {
-                        ticks: { callback: (val) => '$' + val.toLocaleString() }
-                    }
-                }
-            }
+        // 2. Adjust for Inflation (Purchasing Power)
+        let inflationAdjustedValue = currentWealth / Math.pow((1 + inflationRate), y);
+
+        // 3. Store this in our Master Data Set
+        reportData.push({
+            year: y,
+            nominalWealth: currentWealth.toFixed(0),
+            realWealth: inflationAdjustedValue.toFixed(0),
+            taxPaid: tax.toFixed(0),
+            growth: growth.toFixed(0)
         });
     }
 
-    // Initial run
-    runSimulation();
-</script>
+    console.log("Master Report Data Generated:", reportData);
+    displayTable(reportData); // This will show the "Audit Trail"
+}
 
-</body>
-</html>
+function displayTable(data) {
+    // We will build code here to inject a giant table into your HTML
+    // This table represents the "Detailed Appendix" of your 100-page report.
+}
