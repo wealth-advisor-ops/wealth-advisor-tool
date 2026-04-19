@@ -33,6 +33,61 @@ function runDetailedAnalysis() {
 }
 
 function displayTable(data) {
-    // We will build code here to inject a giant table into your HTML
-    // This table represents the "Detailed Appendix" of your 100-page report.
-}
+    let container = document.getElementById('mainChart').parentElement;
+    
+    // We create a container specifically for the PDF Report
+    let reportHTML = `
+        <div id="printableReport" style="background: white; color: black; padding: 20px; font-family: 'Times New Roman', serif;">
+            <h1 style="text-align: center; border-bottom: 2px solid #000;">30-Year Strategic Wealth Audit</h1>
+            <p style="text-align: right;">Prepared for: Premium Client | Date: ${new Date().toLocaleDateString()}</p>
+    `;
+
+    // 100-page logic: We can split this data into multiple tables
+    reportHTML += `
+        <table style="width: 100%; border-collapse: collapse; margin-top: 20px;" border="1">
+            <thead>
+                <tr style="background: #e2e8f0;">
+                    <th>Year</th>
+                    <th>Nominal Wealth ($)</th>
+                    <th>Real Value (Adjusted)</th>
+                    <th>Tax Friction</th>
+                    <th>Strategic Observations</th>
+                </tr>
+            </thead>
+            <tbody>
+    `;
+
+    data.forEach(row => {
+        // Here is the "Complicated Reasoning" Segment
+        let observation = "";
+        if (row.taxPaid > 50000) {
+            observation = "Critical Tax Drag: Recommend Tax-Loss Harvesting.";
+        } else if (row.year > 15) {
+            observation = "Compounding Peak: Wealth doubling every ~10 years.";
+        } else {
+            observation = "Accumulation Phase: Focus on minimizing fees.";
+        }
+
+        reportHTML += `
+            <tr style="height: 40px;">
+                <td style="text-align: center;">${row.year}</td>
+                <td style="text-align: right;">$${parseInt(row.nominalWealth).toLocaleString()}</td>
+                <td style="text-align: right; color: green;">$${parseInt(row.realWealth).toLocaleString()}</td>
+                <td style="text-align: right; color: red;">$${parseInt(row.taxPaid).toLocaleString()}</td>
+                <td style="font-size: 0.8rem; padding-left: 10px;">${observation}</td>
+            </tr>
+        `;
+        
+        // Page Breaking Logic: In a 100-page report, we insert a break every 25 years
+        if (row.year % 25 === 0) {
+            reportHTML += `</tbody></table><div style="page-break-after: always;"></div>
+                           <table style="width: 100%; border-collapse: collapse; margin-top: 20px;" border="1"><tbody>`;
+        }
+    });
+
+    reportHTML += `</tbody></table></div>`;
+    
+    // Inject into the page
+    container.innerHTML = reportHTML;
+        
+        }
