@@ -1,93 +1,69 @@
-function runDetailedAnalysis() {
-    const capital = parseFloat(document.getElementById('totalCap').value);
-    const inflationRate = 0.03; // 3% Inflation as a standard
-    const years = 30; // Let's look further ahead
-    
-    let currentWealth = capital;
-    let reportData = []; // This is our "Data Bucket" for the 100-page report
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Professional Wealth Audit</title>
+    <style>
+        body { font-family: sans-serif; padding: 20px; background: #f4f7f6; }
+        .main-content { background: white; padding: 30px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th { background: #e2e8f0; padding: 10px; border: 1px solid #cbd5e1; }
+        td { padding: 10px; border: 1px solid #cbd5e1; text-align: right; }
+    </style>
+</head>
+<body>
 
-    for (let y = 1; y <= years; y++) {
-        // 1. Calculations (The "Logic Segments")
-        let growth = currentWealth * 0.07; // Assuming 7% average growth
-        let tax = growth * 0.20;           // Assuming 20% Capital Gains tax
-        let insurance = 1200;              // Standard Premium
-        
-        let netYearlyChange = growth - tax - insurance;
-        currentWealth += netYearlyChange;
+    <div class="main-content">
+        <h1>Wealth Advisor Tool</h1>
+        <label>Initial Capital: </label>
+        <input type="number" id="totalCap" value="100000">
+        <button onclick="runDetailedAnalysis()">Generate 30-Year Report</button>
 
-        // 2. Adjust for Inflation (Purchasing Power)
-        let inflationAdjustedValue = currentWealth / Math.pow((1 + inflationRate), y);
+        <div id="reportOutput"></div>
+    </div>
 
-        // 3. Store this in our Master Data Set
-        reportData.push({
-            year: y,
-            nominalWealth: currentWealth.toFixed(0),
-            realWealth: inflationAdjustedValue.toFixed(0),
-            taxPaid: tax.toFixed(0),
-            growth: growth.toFixed(0)
-        });
+    <script>
+    function runDetailedAnalysis() {
+        const capital = parseFloat(document.getElementById('totalCap').value);
+        const inflationRate = 0.03;
+        const years = 30;
+        let currentWealth = capital;
+        let reportData = [];
+
+        for (let y = 1; y <= years; y++) {
+            let growth = currentWealth * 0.07;
+            let tax = growth * 0.20;
+            let insurance = 1200;
+            let netYearlyChange = growth - tax - insurance;
+            currentWealth += netYearlyChange;
+            let inflationAdjustedValue = currentWealth / Math.pow((1 + inflationRate), y);
+
+            reportData.push({
+                year: y,
+                nominalWealth: currentWealth.toFixed(0),
+                realWealth: inflationAdjustedValue.toFixed(0),
+                taxPaid: tax.toFixed(0)
+            });
+        }
+        displayTable(reportData);
     }
 
-    console.log("Master Report Data Generated:", reportData);
-    displayTable(reportData); // This will show the "Audit Trail"
-}
-
-function displayTable(data) {
-    let container = document.getElementById('mainChart').parentElement;
-    
-    // We create a container specifically for the PDF Report
-    let reportHTML = `
-        <div id="printableReport" style="background: white; color: black; padding: 20px; font-family: 'Times New Roman', serif;">
-            <h1 style="text-align: center; border-bottom: 2px solid #000;">30-Year Strategic Wealth Audit</h1>
-            <p style="text-align: right;">Prepared for: Premium Client | Date: ${new Date().toLocaleDateString()}</p>
-    `;
-
-    // 100-page logic: We can split this data into multiple tables
-    reportHTML += `
-        <table style="width: 100%; border-collapse: collapse; margin-top: 20px;" border="1">
-            <thead>
-                <tr style="background: #e2e8f0;">
-                    <th>Year</th>
-                    <th>Nominal Wealth ($)</th>
-                    <th>Real Value (Adjusted)</th>
-                    <th>Tax Friction</th>
-                    <th>Strategic Observations</th>
-                </tr>
-            </thead>
-            <tbody>
-    `;
-
-    data.forEach(row => {
-        // Here is the "Complicated Reasoning" Segment
-        let observation = "";
-        if (row.taxPaid > 50000) {
-            observation = "Critical Tax Drag: Recommend Tax-Loss Harvesting.";
-        } else if (row.year > 15) {
-            observation = "Compounding Peak: Wealth doubling every ~10 years.";
-        } else {
-            observation = "Accumulation Phase: Focus on minimizing fees.";
-        }
-
-        reportHTML += `
-            <tr style="height: 40px;">
-                <td style="text-align: center;">${row.year}</td>
-                <td style="text-align: right;">$${parseInt(row.nominalWealth).toLocaleString()}</td>
-                <td style="text-align: right; color: green;">$${parseInt(row.realWealth).toLocaleString()}</td>
-                <td style="text-align: right; color: red;">$${parseInt(row.taxPaid).toLocaleString()}</td>
-                <td style="font-size: 0.8rem; padding-left: 10px;">${observation}</td>
-            </tr>
-        `;
+    function displayTable(data) {
+        let container = document.getElementById('reportOutput');
+        let html = `<h2>30-Year Strategic Wealth Audit</h2><table>
+                    <tr><th>Year</th><th>Nominal Wealth</th><th>Real Value</th><th>Tax Paid</th></tr>`;
         
-        // Page Breaking Logic: In a 100-page report, we insert a break every 25 years
-        if (row.year % 25 === 0) {
-            reportHTML += `</tbody></table><div style="page-break-after: always;"></div>
-                           <table style="width: 100%; border-collapse: collapse; margin-top: 20px;" border="1"><tbody>`;
-        }
-    });
-
-    reportHTML += `</tbody></table></div>`;
-    
-    // Inject into the page
-    container.innerHTML = reportHTML;
+        data.forEach(row => {
+            html += `<tr>
+                <td>${row.year}</td>
+                <td>$${parseInt(row.nominalWealth).toLocaleString()}</td>
+                <td>$${parseInt(row.realWealth).toLocaleString()}</td>
+                <td>$${parseInt(row.taxPaid).toLocaleString()}</td>
+            </tr>`;
+        });
         
-        }
+        html += `</table>`;
+        container.innerHTML = html;
+    }
+    </script>
+</body>
+</html>
